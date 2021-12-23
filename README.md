@@ -19,3 +19,14 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/annoy_ex](https://hexdocs.pm/annoy_ex).
 
+TODO:
+
+Wrap NIF resource in a module:
+
+defmodule DBConn do
+  defstruct [:resource]
+
+  defimpl Inspect do
+    # ...
+  end
+end

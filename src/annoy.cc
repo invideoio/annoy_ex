@@ -9,6 +9,7 @@ using namespace Annoy;
 #else
   typedef AnnoyIndexSingleThreadedBuildPolicy AnnoyIndexThreadedBuildPolicy;
 #endif
+
 template class AnnoyIndexInterface<int32_t, float>;
 
 typedef AnnoyIndex<int32_t, float, Angular, Kiss64Random, AnnoyIndexThreadedBuildPolicy> AnnoyIndexAngular;
@@ -21,35 +22,23 @@ static ErlNifResourceType* ANNOY_INDEX_RESOURCE;
 typedef struct
 {
    AnnoyIndexInterface<int32_t, float>* idx;
-} ex_annoy; 
+} ex_annoy;
 
-// extern "C"
-// {
-    // ERL_NIF_TERM annoy_new_index(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_new_filter(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_insert(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_contains(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+bool ex_atom_to_bool(char *astr) {
+  return strcmp(astr, "true") == 0;
+}
 
-    // ERL_NIF_TERM ebloom_clear(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-
-    // ERL_NIF_TERM ebloom_size(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_elements(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_effective_fpp(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-
-    // ERL_NIF_TERM ebloom_filter_intersect(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_filter_union(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_filter_difference(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-
-    // ERL_NIF_TERM ebloom_serialize(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    // ERL_NIF_TERM ebloom_deserialize(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-
-    // void ebloom_filter_dtor(ErlNifEnv* env, void* arg);
-    // int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info);
-
-
-  // ERL_NIF_INIT(ebloom, funcs, &on_load, NULL, NULL, NULL);
-//}
-
+bool check_constraints(ex_annoy *handle, int32_t item, bool building) {
+  if (item < 0) {
+    // PyErr_SetString(PyExc_IndexError, "Item index can not be negative");
+    return false;
+  } else if (!building && item >= handle->idx->get_n_items()) {
+    // PyErr_SetString(PyExc_IndexError, "Item index larger than the largest item index");
+    return false;
+  } else {
+    return true;
+  }
+}
 
 ERL_NIF_TERM annoy_new_index(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) 
 {
@@ -58,7 +47,7 @@ ERL_NIF_TERM annoy_new_index(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
   
   if (!enif_get_int(env, argv[0], &f)) {
     return enif_make_badarg(env);
-    }
+  }
 
   if(!enif_get_atom(env, argv[1], metric, sizeof(metric), ERL_NIF_LATIN1)) {
     return enif_make_badarg(env);
@@ -82,17 +71,106 @@ ERL_NIF_TERM annoy_new_index(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]
   return result;
 }
 
-// static ERL_NIF_TERM
-// load(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
-//   AnnoyIndexInterface<int32_t, float>* ptr;
-//   // filename to load
-//   // prefault or not
+ERL_NIF_TERM annoy_load(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+    ex_annoy* handle;
+    ErlNifBinary file;
+    char prefault_arg[6];
+    // char filename[4096];
+    char *error;
 
-//   if(!enif_get_resource(env, argv[0], ANNOY_INDEX_RESOURCE, (void**)&ptr )) {
-//     return enif_make_badarg(env);
-//   }
+    // (void)memset(&filename, '\0', sizeof(filename));
 
-// } 
+    if(!(enif_get_resource(env, argv[0], ANNOY_INDEX_RESOURCE, (void**)&handle) &&
+         enif_inspect_binary(env, argv[1], &file) &&
+         // enif_get_string(env, argv[1], filename, sizeof(filename), ERL_NIF_LATIN1) &&
+         enif_get_atom(env, argv[2], prefault_arg, sizeof(prefault_arg), ERL_NIF_LATIN1))) {
+
+        return enif_make_badarg(env);
+    } else {
+        const char *filename = reinterpret_cast<const char *>(file.data);
+        // enif_get_string(env, argv[1], filename, sizeof(filename), ERL_NIF_LATIN1);
+        bool prefault = ex_atom_to_bool(prefault_arg);
+
+        //enif_fprintf(stderr, "loading %s\n", filename);
+        if(!handle->idx->load(filename, prefault, &error)) {
+          free(error);
+          // TODO: use the error and return a tuple.
+          return enif_make_atom(env, "err");
+        }
+
+        return enif_make_atom(env, "ok");
+    }
+}
+
+ERL_NIF_TERM annoy_save(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+    ex_annoy* handle;
+    ErlNifBinary file;
+    char prefault_arg[6];
+    char *error;
+
+    if(!(enif_get_resource(env, argv[0], ANNOY_INDEX_RESOURCE, (void**)&handle) &&
+         enif_inspect_binary(env, argv[1], &file) &&
+         enif_get_atom(env, argv[2], prefault_arg, sizeof(prefault_arg), ERL_NIF_LATIN1))) {
+
+        return enif_make_badarg(env);
+    } else {
+        char *filename = (char *)file.data;
+        bool prefault = ex_atom_to_bool(prefault_arg);
+
+        // enif_fprintf(stderr, "loading %s", filename);
+        if(!handle->idx->save(filename, prefault, &error)) {
+          free(error);
+          // TODO: use the error and return a tuple.
+          return enif_make_atom(env, "err");
+        }
+
+        return enif_make_atom(env, "ok");
+    }
+}
+
+ERL_NIF_TERM annoy_get_nns_by_item(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]) {
+  ex_annoy* handle;
+  int32_t item, n, search_k, include_distances;
+  char include_distances_arg[6];
+
+  if(!(enif_get_resource(env, argv[0], ANNOY_INDEX_RESOURCE, (void**)&handle) &&
+        enif_get_int(env, argv[1], &item) &&
+        enif_get_int(env, argv[2], &n),
+        enif_get_int(env, argv[3], &search_k),
+        enif_get_atom(env, argv[4], include_distances_arg, sizeof(include_distances_arg), ERL_NIF_LATIN1))) {
+
+      return enif_make_badarg(env);
+  }
+
+  include_distances = !strcmp("include_distances_arg", "false") ? 0 : 1; 
+
+  if(!check_constraints(handle, item, false)) {
+    // TODO: return :err, errstring.
+    return enif_make_badarg(env);
+  }
+
+  vector<int32_t> result;
+  vector<float> distances;
+  ERL_NIF_TERM result_list = enif_make_list(env, 0);
+  ERL_NIF_TERM distances_list = enif_make_list(env, 0);
+
+  enif_fprintf(stderr, "getting nns_by_item\n");
+  handle->idx->get_nns_by_item(item, n, search_k, &result, include_distances ? &distances : NULL);
+  
+  if(result.size()) {
+    enif_fprintf(stderr, "making list from result\n");
+    for (auto i = result.begin(); i != result.end(); ++i)
+      result_list = enif_make_list_cell(env, enif_make_int(env, *i), result_list);
+  }
+
+  if(distances.size()) {
+    enif_fprintf(stderr, "making distances from result\n");
+    for (auto i = distances.begin(); i != distances.end(); ++i)
+      distances_list = enif_make_list_cell(env, enif_make_double(env, *i), distances_list);
+  }
+  
+  return enif_make_tuple2(env, result_list, distances_list);
+}
 
 void annoy_index_dtor(ErlNifEnv* env, void* arg)
 {
@@ -108,21 +186,12 @@ int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
     return 0;
 }
 
-    static ErlNifFunc funcs[] =
-    {
-        { "new", 2, annoy_new_index, 0 }
-        // {"new",           3, ebloom_new_filter},
-        // {"insert",        2, ebloom_insert},
-        // {"contains",      2, ebloom_contains},
-        // {"clear",         1, ebloom_clear},
-        // {"size",          1, ebloom_size},
-        // {"elements",      1, ebloom_elements},
-        // {"effective_fpp", 1, ebloom_effective_fpp},
-        // {"intersect",     2, ebloom_filter_intersect},
-        // {"union",         2, ebloom_filter_union},
-        // {"difference",    2, ebloom_filter_difference},
-        // {"serialize",     1, ebloom_serialize},
-        // {"deserialize",   1, ebloom_deserialize}
-    };
+static ErlNifFunc funcs[] =
+{
+  {"new",             2, annoy_new_index,       0},
+  {"load",            3, annoy_load,            0},
+  {"save",            3, annoy_save,            0},
+  {"get_nns_by_item", 5, annoy_get_nns_by_item, 0}
+};
 
-  ERL_NIF_INIT(Elixir.AnnoyEx, funcs, &on_load, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.AnnoyEx, funcs, &on_load, NULL, NULL, NULL)
