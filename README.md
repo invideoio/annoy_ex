@@ -1,6 +1,13 @@
 # AnnoyEx
 
 **TODO: Add description**
+Elixir NIF port of https://github.com/spotify/annoy
+
+Resources:
+https://www.erlang.org/doc/man/erl_nif.html
+https://github.com/ulfl/setconcile
+https://github.com/devinus/markdown
+https://github.com/bdt-group/clickhouse_parser
 
 ## Installation
 

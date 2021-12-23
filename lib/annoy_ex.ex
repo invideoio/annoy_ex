@@ -68,4 +68,56 @@ defmodule AnnoyEx do
   def get_nns_by_item(_,_,_,_,_) do
     exit(:nif_library_not_loaded)
   end
+
+  @doc ~S"""
+  Same as `get_nns_by_item` but query by tuple `v`
+
+  Returns a 2 element tuple with two lists in it: results and distances.
+  """
+  @spec get_nns_by_vector(idx :: reference(), v :: tuple(), n :: pos_integer(), search_k :: integer(), include_distances :: boolean()) :: {list(), list()}
+  def get_nns_by_vector(idx, v, n, search_k \\ -1, include_distances \\ true)
+
+  def get_nns_by_vector(_,_,_,_,_) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Returns the vector for item `i` that was previously added."
+  @spec get_item_vector(idx :: reference(), i :: pos_integer()) :: list()
+  def get_item_vector(idx, i)
+
+  def get_item_vector(_,_) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "returns the distance between items `i` and `j`."
+  @spec get_distance(idx :: reference(), i :: pos_integer(), j :: pos_integer()) :: float()
+  def get_distance(idx, i, j)
+
+  def get_distance(_,_,_) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Returns the number of items in the index."
+  @spec get_n_items(idx :: reference()) :: integer()
+  def get_n_items(idx)
+
+  def get_n_items(_) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Returns the number of trees in the index."
+  @spec get_n_trees(idx :: reference()) :: integer()
+  def get_n_trees(idx)
+
+  def get_n_trees(_) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Adds item `i` (any nonnegative integer) with tuple `v`"
+  @spec add_item(idx :: reference(), i :: pos_integer(), v :: tuple()) :: atom()
+  def add_item(idx, i, v)
+
+  def add_item(_,_,_) do
+    exit(:nif_library_not_loaded)
+  end
 end
