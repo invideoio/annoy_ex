@@ -10,10 +10,9 @@ defmodule AnnoyExAngularIndexTest do
 
         for j <- 0..(n_points - 1) do
           p = normal_list(f - 1)
-          norm = Enum.sum(Enum.map(p, fn pi -> pi ** 2 end)) ** 0.5
+          norm = :math.pow(Enum.sum(Enum.map(p, fn pi -> :math.pow(pi, 2) end)), 0.5)
 
-          x =
-            Enum.map(p, fn pi -> pi / norm * j end) |> List.insert_at(0, 1000)
+          x = Enum.map(p, fn pi -> pi / norm * j end) |> List.insert_at(0, 1000)
 
           AnnoyEx.add_item(i, j, x)
         end
@@ -71,7 +70,11 @@ defmodule AnnoyExAngularIndexTest do
     AnnoyEx.add_item(i, 0, [0, 1])
     AnnoyEx.add_item(i, 1, [1, 1])
 
-    assert_in_delta(AnnoyEx.get_distance(i, 0, 1), (2 * (1.0 - 2 ** -0.5)) ** 0.5, 0.1)
+    assert_in_delta(
+      AnnoyEx.get_distance(i, 0, 1),
+      :math.pow(2 * (1.0 - :math.pow(2, -0.5)), 0.5),
+      0.1
+    )
   end
 
   test "dist_2" do
@@ -87,7 +90,8 @@ defmodule AnnoyExAngularIndexTest do
     AnnoyEx.add_item(i, 0, [97, 0])
     AnnoyEx.add_item(i, 1, [42, 42])
 
-    dist = ((1 - 2 ** -0.5) ** 2 + 2 ** -0.5 ** 2) ** 0.5
+    dist =
+      :math.pow(:math.pow(1.0 - :math.pow(2, -0.5), 2) + :math.pow(:math.pow(2, -0.5), 2), 0.5)
 
     assert_in_delta(AnnoyEx.get_distance(i, 0, 1), dist, 0.01)
   end
@@ -97,7 +101,7 @@ defmodule AnnoyExAngularIndexTest do
     AnnoyEx.add_item(i, 0, [1, 0])
     AnnoyEx.add_item(i, 1, [0, 0])
 
-    assert_in_delta(AnnoyEx.get_distance(i, 0, 1), 2.0 ** 0.5, 0.01)
+    assert_in_delta(AnnoyEx.get_distance(i, 0, 1), :math.pow(2.0, 0.5), 0.01)
   end
 
   test "large index" do
@@ -236,16 +240,16 @@ defmodule AnnoyExAngularIndexTest do
         u = AnnoyEx.get_item_vector(i, a)
         v = AnnoyEx.get_item_vector(i, b)
 
-        u_norm = Enum.map(u, fn x -> x * dot_product(u, u) ** -0.5 end)
-        v_norm = Enum.map(v, fn x -> x * dot_product(v, v) ** -0.5 end)
+        u_norm = Enum.map(u, fn x -> x * :math.pow(dot_product(u, u), -0.5) end)
+        v_norm = Enum.map(v, fn x -> x * :math.pow(dot_product(v, v), -0.5) end)
 
         # self.assertAlmostEqual(dist ** 2, numpy.dot(u_norm - v_norm, u_norm - v_norm))
         norm_diff = Enum.zip_reduce(u_norm, v_norm, [], fn x, y, acc -> [x - y | acc] end)
-        assert_in_delta(dist ** 2, dot_product(norm_diff, norm_diff), 0.01)
+        assert_in_delta(:math.pow(dist, 2), dot_product(norm_diff, norm_diff), 0.01)
         # self.assertAlmostEqual(dist ** 2, sum([(x-y)**2 for x, y in zip(u_norm, v_norm)]))
         assert_in_delta(
-          dist ** 2,
-          Enum.zip_with(u_norm, v_norm, fn x, y -> (x - y) ** 2 end) |> Enum.sum(),
+          :math.pow(dist, 2),
+          Enum.zip_with(u_norm, v_norm, fn x, y -> :math.pow(x - y, 2) end) |> Enum.sum(),
           0.01
         )
       end
@@ -294,6 +298,6 @@ defmodule AnnoyExAngularIndexTest do
     AnnoyEx.save(a, Path.join(tmp_dir, "1.ann"))
     {indices, dists} = AnnoyEx.get_nns_by_vector(a, [1, 0, 0], 3, -1, true)
     assert indices == [0]
-    assert_in_delta(Enum.at(dists, 0) ** 2, 0.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(dists, 0), 2), 0.0, 0.01)
   end
 end

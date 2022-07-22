@@ -1,11 +1,10 @@
 defmodule Mix.Tasks.Compile.Annoy do
   def run(_) do
     {result, _error_code} = System.cmd("make", ["priv/annoy.so"], stderr_to_stdout: true)
-    IO.binwrite result
+    IO.binwrite(result)
     :ok
   end
 end
-
 
 defmodule AnnoyEx.MixProject do
   use Mix.Project
@@ -26,7 +25,7 @@ defmodule AnnoyEx.MixProject do
       docs: [
         main: "readme",
         extras: [
-          "README.md",
+          "README.md"
         ]
       ]
     ]
@@ -43,7 +42,7 @@ defmodule AnnoyEx.MixProject do
   defp deps do
     [
       {:random, "~> 0.2.4", only: :test},
-      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
     ]
   end
 end

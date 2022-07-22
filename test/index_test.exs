@@ -255,7 +255,7 @@ defmodule AnnoyExIndexTest do
   @tag :tmp_dir
   test "very large index", %{tmp_dir: tmp_dir} do
     f = 3
-    dangerous_size = 2 ** 31
+    dangerous_size = :math.pow(2, 31)
     size_per_vector = 4 * (f + 3)
     n_vectors = floor(dangerous_size / size_per_vector)
 

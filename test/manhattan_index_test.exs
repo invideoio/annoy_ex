@@ -10,7 +10,7 @@ defmodule AnnoyExManhattanIndexTest do
 
         for j <- 0..(n_points - 1) do
           p = normal_list(f)
-          norm = Enum.sum(Enum.map(p, fn pi -> pi ** 2 end)) ** 0.5
+          norm = :math.pow(Enum.sum(Enum.map(p, fn pi -> :math.pow(pi, 2) end)), 0.5)
           x = Enum.map(p, fn pi -> pi / norm + j end)
           AnnoyEx.add_item(i, j, x)
         end

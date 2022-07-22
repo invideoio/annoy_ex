@@ -39,8 +39,8 @@ defmodule AnnoyExEuclideanIndexTest do
     AnnoyEx.add_item(i, 1, [1, 1])
     AnnoyEx.add_item(i, 2, [0, 0])
 
-    assert_in_delta(AnnoyEx.get_distance(i, 0, 1), 1.0 ** 0.5, 0.01)
-    assert_in_delta(AnnoyEx.get_distance(i, 1, 2), 2.0 ** 0.5, 0.01)
+    assert_in_delta(AnnoyEx.get_distance(i, 0, 1), :math.pow(1.0, 0.5), 0.01)
+    assert_in_delta(AnnoyEx.get_distance(i, 1, 2), :math.pow(2.0, 0.5), 0.01)
   end
 
   test "large index" do
@@ -75,7 +75,7 @@ defmodule AnnoyExEuclideanIndexTest do
 
         for j <- 0..(n_points - 1) do
           p = normal_list(f)
-          norm = Enum.sum(Enum.map(p, fn pi -> pi ** 2 end)) ** 0.5
+          norm = :math.pow(Enum.sum(Enum.map(p, fn pi -> :math.pow(pi, 2) end)), 0.5)
           x = Enum.map(p, fn pi -> pi / norm * j end)
           AnnoyEx.add_item(i, j, x)
         end
@@ -117,15 +117,15 @@ defmodule AnnoyExEuclideanIndexTest do
 
     {l, d} = AnnoyEx.get_nns_by_item(i, 0, 3, -1, true)
     assert l == [0, 1, 2]
-    assert_in_delta(Enum.at(d, 0) ** 2, 0.0, 0.01)
-    assert_in_delta(Enum.at(d, 1) ** 2, 2.0, 0.01)
-    assert_in_delta(Enum.at(d, 2) ** 2, 5.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(d, 0), 2), 0.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(d, 1), 2), 2.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(d, 2), 2), 5.0, 0.01)
 
     {l, d} = AnnoyEx.get_nns_by_vector(i, [2, 2, 2], 3, -1, true)
     assert l == [1, 0, 2]
-    assert_in_delta(Enum.at(d, 0) ** 2, 6.0, 0.01)
-    assert_in_delta(Enum.at(d, 1) ** 2, 8.0, 0.01)
-    assert_in_delta(Enum.at(d, 2) ** 2, 9.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(d, 0), 2), 6.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(d, 1), 2), 8.0, 0.01)
+    assert_in_delta(:math.pow(Enum.at(d, 2), 2), 9.0, 0.01)
   end
 
   test "include dists" do
@@ -163,12 +163,12 @@ defmodule AnnoyExEuclideanIndexTest do
         v_diff = Enum.zip_reduce(u, v, [], fn x, y, acc -> [x - y | acc] end)
 
         # self.assertAlmostEqual(dist, numpy.dot(u - v, u - v) ** 0.5)
-        assert_in_delta(dist, dot_product(v_diff, v_diff) ** 0.5, 0.01)
+        assert_in_delta(dist, :math.pow(dot_product(v_diff, v_diff), 0.5), 0.01)
 
         # self.assertAlmostEqual(dist, sum([(x-y)**2 for x, y in zip(u, v)])**0.5)
         assert_in_delta(
           dist,
-          (Enum.zip_with(u, v, fn x, y -> (x - y) ** 2 end) |> Enum.sum()) ** 0.5,
+          :math.pow(Enum.zip_with(u, v, fn x, y -> :math.pow(x - y, 2) end) |> Enum.sum(), 0.5),
           0.01
         )
       end
