@@ -1,11 +1,11 @@
 defmodule AnnoyEx do
-  @moduledoc """
-  The Spotity Annoy library as a NIF.
-  """
+  @type ok_or_err_tuple() :: :ok | {:err, String.t()}
 
-  @on_load { :init, 0 }
+  @moduledoc "The Spotity Annoy library as a NIF."
 
-  app = Mix.Project.config[:app]
+  @on_load {:init, 0}
+
+  app = Mix.Project.config()[:app]
 
   def init do
     path = :filename.join(:code.priv_dir(unquote(app)), 'annoy')
@@ -14,17 +14,11 @@ defmodule AnnoyEx do
 
   @doc ~S"""
     Initializes a new index that's read-write and stores vector of f dimensions.
-    Converts a Markdown document to HTML:
-        iex> Markdown.to_html "# Hello World"
-        "<h1>Hello World</h1>\n"
-        iex> Markdown.to_html "http://elixir-lang.org/", autolink: true
-        "<p><a href=\"http://elixir-lang.org/\">http://elixir-lang.org/</a></p>\n"
 
     Available metrics:
     * `:angular` - The default.
     * `:euclidean`
     * `:manhattan`
-    * `:hamming`
     * `:dot`
   """
   @spec new(f :: pos_integer()) :: {:ok, reference()}
@@ -36,20 +30,28 @@ defmodule AnnoyEx do
   end
 
   @doc "Loads (mmaps) an index from disk.  Full path must be given."
-  @spec load(idx :: reference(), filename :: binary()) :: atom()
-  @spec load(idx :: reference(), filename :: binary(), preload :: boolean()) :: atom()
+  @spec load(idx :: reference(), filename :: binary()) :: ok_or_err_tuple()
+  @spec load(idx :: reference(), filename :: binary(), preload :: boolean()) :: ok_or_err_tuple()
   def load(idx, filename, preload \\ false)
 
-  def load(_,_,_) do
+  def load(_, _, _) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Unloads."
+  @spec unload(idx :: reference()) :: :ok
+  def unload(idx)
+
+  def unload(_) do
     exit(:nif_library_not_loaded)
   end
 
   @doc "Saves the index to disk.  Full path must be given."
-  @spec save(idx :: reference(), filename :: binary()) :: atom()
-  @spec save(idx :: reference(), filename :: binary(), preload :: boolean()) :: atom()
-  def save(idx, filename, preload \\ false)
+  @spec save(idx :: reference(), filename :: binary()) :: ok_or_err_tuple()
+  @spec save(idx :: reference(), filename :: binary(), prefault :: boolean()) :: ok_or_err_tuple()
+  def save(idx, filename, prefault \\ false)
 
-  def save(_,_,_) do
+  def save(_, _, _) do
     exit(:nif_library_not_loaded)
   end
 
@@ -62,22 +64,34 @@ defmodule AnnoyEx do
 
   Returns a 2 element tuple with two lists in it: results and distances.
   """
-  @spec get_nns_by_item(idx :: reference(), i :: pos_integer(), n :: pos_integer(), search_k :: integer(), include_distances :: boolean()) :: {list(), list()}
+  @spec get_nns_by_item(
+          idx :: reference(),
+          i :: pos_integer(),
+          n :: pos_integer(),
+          search_k :: integer(),
+          include_distances :: boolean()
+        ) :: {list(), list()}
   def get_nns_by_item(idx, i, n, search_k \\ -1, include_distances \\ true)
 
-  def get_nns_by_item(_,_,_,_,_) do
+  def get_nns_by_item(_, _, _, _, _) do
     exit(:nif_library_not_loaded)
   end
 
   @doc ~S"""
-  Same as `get_nns_by_item` but query by tuple `v`
+  Same as `get_nns_by_item` but query by list `v`
 
   Returns a 2 element tuple with two lists in it: results and distances.
   """
-  @spec get_nns_by_vector(idx :: reference(), v :: tuple(), n :: pos_integer(), search_k :: integer(), include_distances :: boolean()) :: {list(), list()}
+  @spec get_nns_by_vector(
+          idx :: reference(),
+          v :: list(),
+          n :: pos_integer(),
+          search_k :: integer(),
+          include_distances :: boolean()
+        ) :: {list(), list()}
   def get_nns_by_vector(idx, v, n, search_k \\ -1, include_distances \\ true)
 
-  def get_nns_by_vector(_,_,_,_,_) do
+  def get_nns_by_vector(_, _, _, _, _) do
     exit(:nif_library_not_loaded)
   end
 
@@ -85,7 +99,7 @@ defmodule AnnoyEx do
   @spec get_item_vector(idx :: reference(), i :: pos_integer()) :: list()
   def get_item_vector(idx, i)
 
-  def get_item_vector(_,_) do
+  def get_item_vector(_, _) do
     exit(:nif_library_not_loaded)
   end
 
@@ -93,7 +107,7 @@ defmodule AnnoyEx do
   @spec get_distance(idx :: reference(), i :: pos_integer(), j :: pos_integer()) :: float()
   def get_distance(idx, i, j)
 
-  def get_distance(_,_,_) do
+  def get_distance(_, _, _) do
     exit(:nif_library_not_loaded)
   end
 
@@ -113,11 +127,67 @@ defmodule AnnoyEx do
     exit(:nif_library_not_loaded)
   end
 
-  @doc "Adds item `i` (any nonnegative integer) with tuple `v`"
-  @spec add_item(idx :: reference(), i :: pos_integer(), v :: tuple()) :: atom()
+  @doc "Adds item `i` (any nonnegative integer) with list `v`"
+  @spec add_item(idx :: reference(), i :: pos_integer(), v :: list()) :: ok_or_err_tuple()
   def add_item(idx, i, v)
 
-  def add_item(_,_,_) do
+  def add_item(_, _, _) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc ~S"""
+  builds a forest of `n_trees` trees. More trees gives higher precision when querying. 
+
+  After calling build, no more items can be added. 
+
+  `n_jobs` specifies the number of threads used to build the trees.
+  `n_jobs=-1` uses all available CPU cores.
+  """
+  @spec build(idx :: reference(), n_trees :: pos_integer(), n_jobs :: integer()) ::
+          ok_or_err_tuple()
+  def build(idx, n_trees, n_jobs \\ -1)
+
+  def build(_, _, _) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Unbuilds."
+  @spec unbuild(idx :: reference()) :: ok_or_err_tuple()
+  def unbuild(idx)
+
+  def unbuild(_) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc ~S"""
+  prepares annoy to build the index in the specified file instead of RAM 
+  (execute before adding items, no need to save after build)
+  """
+  @spec on_disk_build(idx :: reference(), filename :: binary()) :: ok_or_err_tuple()
+  def on_disk_build(idx, filename)
+
+  def on_disk_build(_, _) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc ~S"""
+  will initialize the random number generator with the given seed.
+
+  Only used for building up the tree, i.e. only necessary to pass this before adding the items.
+  Will have no effect after calling `build` or `load`
+  """
+  @spec set_seed(idx :: reference(), seed :: integer()) :: :ok
+  def set_seed(idx, seed)
+
+  def set_seed(_, _) do
+    exit(:nif_library_not_loaded)
+  end
+
+  @doc "Set verbosity."
+  @spec verbose(idx :: reference(), verbose :: boolean()) :: :ok
+  def verbose(idx, verbose)
+
+  def verbose(_, _) do
     exit(:nif_library_not_loaded)
   end
 end

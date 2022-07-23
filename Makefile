@@ -9,7 +9,10 @@ CFLAGS += -Isrc
 
 all: annoy
 
-annoy: priv/annoy.so
+mkpriv:
+	mkdir -p priv
+
+annoy: mkpriv priv/annoy.so
 	$(MIX) compile
 
 priv/annoy.so: src/annoy.cc
