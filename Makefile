@@ -9,7 +9,7 @@ ifeq ($(shell uname),Darwin)
 LDFLAGS += -dynamiclib -undefined dynamic_lookup
 endif
 
-.PHONY: all annoy clean check-env
+.PHONY: all annoy clean mkpriv check-env
 
 all: annoy
 
@@ -19,7 +19,7 @@ mkpriv:
 annoy: check-env mkpriv priv/annoy.so
 	$(MIX) compile
 
-priv/annoy.so: src/annoy.cc
+priv/annoy.so: mkpriv src/annoy.cc
 	clang++ $(CFLAGS) $(LDFLAGS) -o $@ src/annoy.cc
 
 check-env:
