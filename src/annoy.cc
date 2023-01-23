@@ -11,7 +11,7 @@ using namespace Annoy;
   typedef AnnoyIndexSingleThreadedBuildPolicy AnnoyIndexThreadedBuildPolicy;
 #endif
 
-template class AnnoyIndexInterface<int32_t, float>;
+template class Annoy::AnnoyIndexInterface<int32_t, float>;
 
 typedef AnnoyIndex<int32_t, float, Angular, Kiss64Random, AnnoyIndexThreadedBuildPolicy> AnnoyIndexAngular;
 typedef AnnoyIndex<int32_t, float, DotProduct, Kiss64Random, AnnoyIndexThreadedBuildPolicy> AnnoyIndexDotProduct;
