@@ -18,7 +18,7 @@ endif
 
 $(ANNOY_EX_SO): src/annoy.cc
 	mkdir -p $(PRIV_DIR)
-	clang++ $(CFLAGS) $(LDFLAGS) -o $(ANNOY_EX_SO) src/annoy.cc
+	g++ $(CFLAGS) $(LDFLAGS) -o $(ANNOY_EX_SO) src/annoy.cc
 
 clean:
 	$(MIX) clean
