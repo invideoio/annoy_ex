@@ -23,20 +23,14 @@ defmodule AnnoyEx do
   """
   @spec new(f :: pos_integer()) :: {:ok, reference()}
   @spec new(f :: pos_integer(), metric :: atom()) :: {:ok, reference()}
-  def new(f, metric \\ :angular)
-
-  def new(_, _) do
-    exit(:nif_library_not_loaded)
-  end
+  def new(_), do: :erlang.nif_error(:nif_not_loaded)
+  def new(_, _), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc "Loads (mmaps) an index from disk.  Full path must be given."
   @spec load(idx :: reference(), filename :: binary()) :: ok_or_err_tuple()
   @spec load(idx :: reference(), filename :: binary(), preload :: boolean()) :: ok_or_err_tuple()
-  def load(idx, filename, preload \\ false)
-
-  def load(_, _, _) do
-    exit(:nif_library_not_loaded)
-  end
+  def load(_, _), do: :erlang.nif_error(:nif_not_loaded)
+  def load(_, _, _), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc "Unloads."
   @spec unload(idx :: reference()) :: :ok
@@ -125,11 +119,7 @@ defmodule AnnoyEx do
 
   @doc "Adds item `i` (any nonnegative integer) with list `v`"
   @spec add_item(idx :: reference(), i :: pos_integer(), v :: list()) :: ok_or_err_tuple()
-  def add_item(idx, i, v)
-
-  def add_item(_, _, _) do
-    exit(:nif_library_not_loaded)
-  end
+  def add_item(_, _, _), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc ~S"""
   builds a forest of `n_trees` trees. More trees gives higher precision when querying. 
@@ -141,11 +131,7 @@ defmodule AnnoyEx do
   """
   @spec build(idx :: reference(), n_trees :: pos_integer(), n_jobs :: integer()) ::
           ok_or_err_tuple()
-  def build(idx, n_trees, n_jobs \\ -1)
-
-  def build(_, _, _) do
-    exit(:nif_library_not_loaded)
-  end
+  def build(_, _, _), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc "Unbuilds."
   @spec unbuild(idx :: reference()) :: ok_or_err_tuple()
