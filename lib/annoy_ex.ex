@@ -71,11 +71,7 @@ defmodule AnnoyEx do
           search_k :: integer(),
           include_distances :: boolean()
         ) :: {list(), list()}
-  def get_nns_by_item(idx, i, n, search_k \\ -1, include_distances \\ true)
-
-  def get_nns_by_item(_, _, _, _, _) do
-    exit(:nif_library_not_loaded)
-  end
+  def get_nns_by_vector(_, _, _, _, _), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc ~S"""
   Same as `get_nns_by_item` but query by list `v`
