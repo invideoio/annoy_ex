@@ -71,7 +71,11 @@ defmodule AnnoyEx do
           search_k :: integer(),
           include_distances :: boolean()
         ) :: {list(), list()}
-  def get_nns_by_vector(_, _, _, _, _), do: :erlang.nif_error(:nif_not_loaded)
+  def get_nns_by_item(idx, i, n, search_k \\ -1, include_distances \\ true)
+
+  def get_nns_by_item(_, _, _, _, _) do
+    exit(:nif_library_not_loaded)
+  end
 
   @doc ~S"""
   Same as `get_nns_by_item` but query by list `v`
@@ -85,11 +89,7 @@ defmodule AnnoyEx do
           search_k :: integer(),
           include_distances :: boolean()
         ) :: {list(), list()}
-  def get_nns_by_vector(idx, v, n, search_k \\ -1, include_distances \\ true)
-
-  def get_nns_by_vector(_, _, _, _, _) do
-    exit(:nif_library_not_loaded)
-  end
+  def get_nns_by_vector(_, _, _, _, _), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc "Returns the vector for item `i` that was previously added."
   @spec get_item_vector(idx :: reference(), i :: pos_integer()) :: list()
