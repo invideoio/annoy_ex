@@ -21,8 +21,8 @@ defmodule AnnoyEx do
     * `:manhattan`
     * `:dot`
   """
-  @spec new(f :: pos_integer()) :: {:ok, reference()}
-  @spec new(f :: pos_integer(), metric :: atom()) :: {:ok, reference()}
+  @spec new(f :: pos_integer()) :: reference()
+  @spec new(f :: pos_integer(), metric :: atom()) :: reference()
   def new(_), do: :erlang.nif_error(:nif_not_loaded)
   def new(_, _), do: :erlang.nif_error(:nif_not_loaded)
 
